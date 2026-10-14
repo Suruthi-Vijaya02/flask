@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-color: #0f1111;
+            --muted-text: #565959;
+            --primary-teal: #007185;
+            --primary-hover: #005a6a;
+            --border-color: #e7e7e7;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .welcome-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2.5rem;
+            max-width: 520px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted-text);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .details-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-item {
+            font-size: 0.95rem;
+            font-weight: 400;
+            color: var(--text-color);
+            background: #f8f9fa;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .detail-item span.label {
+            color: var(--muted-text);
+            font-weight: 500;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-teal);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: #e7e7e7;
+            color: var(--text-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #d8d8d8;
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-card">
+        <h1>Welcome, {{ user[0] }}</h1>
+        <h2>Confirm Your Details</h2>
+
+        <div class="details-list">
+            <div class="detail-item"><span class="label">Gender:</span> <span>{{ user[1] }}</span></div>
+            <div class="detail-item"><span class="label">Highest Qualification:</span> <span>{{ user[2] }}</span></div>
+            <div class="detail-item"><span class="label">Percentage:</span> <span>{{ user[3] }}%</span></div>
+            <div class="detail-item"><span class="label">Institute:</span> <span>{{ user[4] }}</span></div>
+            <div class="detail-item"><span class="label">Role:</span> <span>{{ user[5] }}</span></div>
+            <div class="detail-item"><span class="label">Experience:</span> <span>{{ user[6] }} years</span></div>
+            <div class="detail-item"><span class="label">Domain:</span> <span>{{ user[7] }}</span></div>
+        </div>
+
+        <div class="button-group">
+            <button id="con" class="btn btn-primary">Continue</button>
+            <a href="/login" class="btn btn-secondary">Logout</a>
+        </div>
+    </div>
+
+    <script>
+        const button = document.getElementById('con');
+        button.addEventListener('click', () => {
+            window.location.href = '/products';
+        });
+    </script>
+</body>
+</html>

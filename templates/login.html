@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>login</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
+            color: #ffffff;
+        }
+
+        h1 {
+            margin-bottom: 24px !important;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(231, 195, 195, 0.2);
+        }
+
+        #login {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            width: 320px;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #login label {
+            text-align: left;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: #e7c3c3;
+            font-weight: 500;
+        }
+
+        #login input {
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.07);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #login input:focus {
+            border-color: #e7c3c3;
+            box-shadow: 0 0 8px rgba(231, 195, 195, 0.4);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        #login button {
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 8px;
+            background: #e7c3c3;
+            color: #1e1e2f;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.1s ease;
+        }
+
+        #login button:hover {
+            background: #f0d4d4;
+            transform: translateY(-1px);
+        }
+
+        #login button:active {
+            transform: translateY(0);
+        }
+
+        #message {
+            margin-top: 16px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 0.95rem;
+            color: #ffd7d7;
+            text-align: center;
+        }
+
+        h4 {
+            margin-top: 12px;
+            text-align: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        h4 a {
+            color: #e7c3c3;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        h4 a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: bold; color: #e7c3c3;">Login</h1>
+    <form id="login">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password">
+        <button type="submit">Login</button>
+    </form>
+    <p id="message"></p>
+    <h4><a href="/register">Register</a></h4>
+    <h4><a href="/forgot-password">Forgot Password</a></h4>
+
+    <script>
+        const form = document.getElementById("login");
+        const email = document.getElementById("email");
+        const password = document.getElementById("password");
+        const message = document.getElementById("message");
+
+        form.addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const emailval = email.value;
+            const passval = password.value;
+
+            const response = await fetch("http://127.0.0.1:5000/login", {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: emailval,
+                    password: passval
+                })
+            });
+
+            const data = await response.json();
+            message.textContent = data.message;
+
+            if (response.ok) {
+                window.location.href = "/welcome";
+            }
+        });
+    </script>
+</body>
+</html>

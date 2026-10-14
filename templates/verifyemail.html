@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify</title>
+</head>
+<body>
+    <h1>Verify</h1>
+    <form id="verify">
+        <label for="otp">OTP</label>
+        <input type="text" id="otp" name="otp">
+        <button type="submit">Submit</button>
+        <p id="message"></p>
+    </form>
+    <script>
+        const form=document.getElementById("verify");
+        const otp=document.getElementById("otp");
+        const message=document.getElementById("message");
+        form.addEventListener("submit",async function(e){
+            e.preventDefault();
+            const otpval=otp.value;
+            const response=await fetch("/verify",{
+                method:"POST",
+                headers:{"content-type":"application/json"},
+                body:JSON.stringify({
+                    otp:otpval
+                })
+            });
+            const data=await response.json();
+            message.textContent=data.message;
+            if(response.ok){
+                alert(data.message);
+                window.location.href="/reset-password";
+            }
+        });
+    </script>
+</body>
+</html>

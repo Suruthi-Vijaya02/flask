@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>onboarding</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin-bottom: 24px !important;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(231, 195, 195, 0.2);
+        }
+
+        #onboard {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            width: 380px !important;
+            box-sizing: border-box;
+        }
+
+        #onboard label {
+            text-align: left;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: #e7c3c3;
+            font-weight: 500;
+        }
+
+        #onboard input,
+        #onboard select {
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.07);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        #onboard select option {
+            background: #2a2a40;
+            color: #fff;
+        }
+
+        #onboard input:focus,
+        #onboard select:focus {
+            border-color: #e7c3c3;
+            box-shadow: 0 0 8px rgba(231, 195, 195, 0.4);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        #onboard button {
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 8px;
+            background: #e7c3c3;
+            color: #1e1e2f;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.1s ease;
+        }
+
+        #onboard button:hover {
+            background: #f0d4d4;
+            transform: translateY(-1px);
+        }
+
+        #onboard button:active {
+            transform: translateY(0);
+        }
+
+        #message {
+            margin-top: 16px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 0.95rem;
+            color: #ffd7d7;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    
+
+    <h1 style="text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: bold;color: #e7c3c3;">Onboarding</h1>
+        <form id="onboard" style="align-items: center;width: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; ;">   
+                    <label for="gender">Gender</label>
+                    <select id="gender" name="gender">
+                    <option value="" disabled selected>Select gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    </select> 
+                    <label for="highest_qualification">Highest Qualification</label>
+                    <select id="highest_qualification" name="highest_qualification">
+                    <option value="" disabled selected>Select highest qualification</option>
+                    <option value="10th">10th</option>
+                    <option value="12th">12th</option>
+                    <option value="Diploma">Diploma</option>
+                    <option value="Graduation">Graduation</option>
+                    <option value="Post Graduation">Post Graduation</option>
+                    </select>
+                    <label for="percentage">Percentage</label>
+                    <input type="number" id="percentage" name="percentage">
+                    <label for="institute">Institute</label>
+                    <input type="text" id="institute" name="institute">
+                    <label for="role">Role</label>
+                    <input type="text" id="role" name="role">   
+                    <label for="experience">Experience</label>
+                    <select id="experience" name="experience">
+                    <option value="" disabled selected>Select experience</option>
+                    <option value="Fresher">Fresher</option>
+                    <option value="1-2 years">1-2 years</option>
+                    <option value="3-5 years">3-5 years</option>
+                    <option value="6-10 years">6-10 years</option>
+                    </select>
+                    <label for="domain">Domain</label>
+                    <input type="text" id="domain" name="domain">
+                    <button type="submit">Submit</button>       
+</form>
+<p id="message"></p>
+
+<script>
+    form=document.getElementById("onboard");
+    form.addEventListener("submit",async function(e){
+        e.preventDefault();
+        const gender=document.getElementById("gender").value;
+        const highest_qualification=document.getElementById("highest_qualification").value;
+        const percentage=document.getElementById("percentage").value;
+        const institute=document.getElementById("institute").value;
+        const role=document.getElementById("role").value;
+        const experience=document.getElementById("experience").value;
+        const domain=document.getElementById("domain").value;
+        
+        const response=await fetch("http://127.0.0.1:5000/onboarding",{
+            method:"POST",
+            headers:{"content-type":"application/json"},
+            body:JSON.stringify({
+                gender:gender,
+                highest_qualification:highest_qualification,
+                percentage:percentage,
+                institute:institute,
+                role:role,
+                experience:experience,
+                domain:domain
+            })
+        });
+
+        data= await response.json();
+        message.textContent=data.message;
+
+        if (response.ok){
+            window.location.href="/welcome";
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reset</title>
+</head>
+<body>
+    <form id="reset-password">
+        <label for="password">enter you new password</label>
+        <input type="password" id="password" name="password">
+        <button type="submit">Submit</button>
+    </form>
+    <script>
+        const form=document.getElementById("reset-password");
+        const password=document.getElementById("password");
+        form.addEventListener("submit",async function(e){
+            e.preventDefault();
+            const passval=password.value;
+            const response=await fetch("/reset-password",{
+                method:"POST",
+                headers:{"content-type":"application/json"},
+                body:JSON.stringify({
+                    password:passval
+                })
+            });
+           const data=await response.json();
+            if(response.ok){
+                alert(data.message);
+                window.location.href="/login";
+            }
+        });
+    </script>
+</body>
+</html>

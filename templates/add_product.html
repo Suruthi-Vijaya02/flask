@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Product</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-color: #0f1111;
+            --muted-text: #565959;
+            --primary-teal: #007185;
+            --primary-hover: #005a6a;
+            --border-color: #e7e7e7;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .form-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2.5rem;
+            max-width: 480px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        input {
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus {
+            border-color: var(--primary-teal);
+            box-shadow: 0 0 0 3px rgba(0, 113, 133, 0.15);
+        }
+
+        button[type="submit"] {
+            margin-top: 0.5rem;
+            padding: 0.85rem;
+            background-color: var(--primary-teal);
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: var(--primary-hover);
+        }
+    </style>
+</head>
+<body>
+    <div class="form-card">
+        <h1>Add New Product</h1>
+        <form id="add-product">
+            <div class="form-group">
+                <label for="prod_name">Product Name</label>
+                <input type="text" id="prod_name" name="prod_name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="des">Description</label>
+                <input type="text" id="des" name="des" required>
+            </div>
+
+            <div class="form-group">
+                <label for="price">Price (₹)</label>
+                <input type="number" id="price" name="price" required>
+            </div>
+
+            <div class="form-group">
+                <label for="image">Image Filename (e.g. pencil.jpeg)</label>
+                <input type="text" id="image" name="image" required>
+            </div>
+
+            <button type="submit">Add Product</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById("add-product");
+        const prod_name = document.getElementById("prod_name");
+        const des = document.getElementById("des");
+        const price = document.getElementById("price");
+        const image = document.getElementById("image");
+
+        form.addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const response = await fetch("/add_product", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                    prod_name: prod_name.value,
+                    des: des.value,
+                    price: price.value,
+                    image: image.value
+                })
+            });
+            const data = await response.json();
+            alert(data.message);
+            window.location.href = "/products";
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Checkout</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 30px 15px;
+        }
+
+        .checkout {
+            max-width: 550px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px #ddd;
+        }
+
+        h1 {
+            text-align: center;
+            color: #222;
+        }
+
+        .item {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .total {
+            text-align: right;
+            font-size: 21px;
+            font-weight: bold;
+            margin: 25px 0;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            background: #198754;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        #message {
+            text-align: center;
+            margin-top: 18px;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="checkout">
+        <h1>Checkout</h1>
+
+        <h3>Order Summary</h3>
+
+        {% for item in cart_items %}
+            <div class="item">
+                <strong>{{ item.prod_name }}</strong>
+                <p>
+                    ₹{{ "%.2f"|format(item.price) }}
+                    × {{ item.quantity }}
+                    = ₹{{ "%.2f"|format(item.price * item.quantity) }}
+                </p>
+            </div>
+        {% endfor %}
+
+        <div class="total">
+            Total: ₹{{ "%.2f"|format(total) }}
+        </div>
+
+        <button id="payButton" type="button">
+            Pay Now (Dummy Payment)
+        </button>
+
+        <p id="message" role="status"></p>
+
+        <a class="back" href="{{ url_for('view_cart') }}">
+            Back to Cart
+        </a>
+    </div>
+
+<script>
+    const button = document.querySelector("#payButton");
+const message = document.querySelector("#message");
+
+button.addEventListener("click", async () => {
+    button.disabled = true;
+    message.textContent = "Processing payment...";
+
+    try {
+        const response = await fetch("/checkout", {
+            method: "POST"
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            message.innerHTML = `
+                <h2>✓ Order Successful!</h2>
+                <p>Order ID: ${data.order_id}</p>
+                <p>Total: ₹${Number(data.total).toFixed(2)}</p>
+                <p>Order summary sent to your email.</p>
+            `;
+
+            button.style.display = "none";
+        } else {
+            message.textContent = data.message;
+            button.disabled = false;
+        }
+    } catch (error) {
+        console.error(error);
+        message.textContent = "Unable to process checkout.";
+        button.disabled = false;
+    }
+});
+</script>
+</body>
+</html>
