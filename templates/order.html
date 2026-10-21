@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Orders</title>
+    <style>
+        :root {
+            --amz-dark: #131921;
+            --amz-secondary: #232f3e;
+            --amz-orange: #ffd814;
+            --amz-orange-hover: #f7ca00;
+            --amz-link: #007185;
+            --amz-link-hover: #c7511f;
+            --amz-border: #d5d9d9;
+            --amz-bg: #f3f3f3;
+            --amz-card-header: #f0f2f2;
+        }
+
+        body {
+            font-family: "Amazon Ember", Arial, sans-serif;
+            background-color: var(--amz-bg);
+            color: #0f1111;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .back-btn {
+            display: inline-block;
+            color: var(--amz-link);
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .back-btn:hover {
+            color: var(--amz-link-hover);
+            text-decoration: underline;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .order-card {
+            background: #fff;
+            border: 1px solid var(--amz-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .order-header {
+            background-color: var(--amz-card-header);
+            border-bottom: 1px solid var(--amz-border);
+            padding: 14px 18px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 15px;
+            font-size: 13px;
+            color: #565959;
+        }
+
+        .order-header-col span {
+            display: block;
+            color: #0f1111;
+            font-weight: 500;
+        }
+
+        .order-body {
+            padding: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .order-items {
+            flex: 1;
+            min-width: 250px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .order-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            text-align: right;
+        }
+
+        @media (max-width: 600px) {
+            .order-meta {
+                align-items: flex-start;
+                text-align: left;
+            }
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .badge-success {
+            background-color: #007600;
+            color: #fff;
+        }
+
+        .badge-pending {
+            background-color: #ffa41c;
+            color: #fff;
+        }
+
+        .payment-method {
+            font-size: 13px;
+            color: #565959;
+        }
+
+        .empty-state {
+            background: #fff;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid var(--amz-border);
+            border-radius: 8px;
+            font-size: 16px;
+            color: #565959;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/products" class="back-btn">&#8592; Back to Products</a>
+        
+        <h1>Your Orders</h1>
+        
+        <div class="orders-list">
+            {% for order in orders %}
+                <div class="order-card">
+                    <!-- Amazon-style top metadata bar per order -->
+                    <div class="order-header">
+                        <div class="order-header-col">
+                            ORDER PLACED
+                            <span>{{ order.date if order.date else 'Recent' }}</span>
+                        </div>
+                        <div class="order-header-col">
+                            TOTAL
+                            <span>₹{{ "%.2f"|format(order.total_amount) }}</span>
+                        </div>
+                        <div class="order-header-col">
+                            ORDER #
+                            <span>{{ order.order_id }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Order item details & status section -->
+                    <div class="order-body">
+                        <div class="order-items">
+                            <strong>Items Ordered:</strong>
+                            <p style="margin: 5px 0 0 0;">{{ order.items_summary if order.items_summary else 'No items found' }}</p>
+                        </div>
+                        
+                        <div class="order-meta">
+                            <span class="badge {% if order.payment_status | upper == 'SUCCESS' %}badge-success{% else %}badge-pending{% endif %}">
+                                Payment: {{ order.payment_status }}
+                            </span>
+                            <span class="payment-method">Method: {{ order.payment_method if order.payment_method else 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    No orders found.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

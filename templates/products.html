@@ -22,20 +22,34 @@
             padding: 0;
         }
 
-        nav{
+        nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1.5rem;
+            gap: 1rem;
         }
-        button{
+
+        .nav-links {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        nav button {
             padding: 0.5rem 1rem;
             border-radius: 8px;
             border: none;
             background-color: #007185;
-            color: #ffffff;
             cursor: pointer;
         }
+
+        nav button a {
+            color: #ffffff;
+            text-decoration: none;
+            display: inline-block;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
@@ -54,34 +68,55 @@
             border-bottom: 2px solid var(--border-color);
         }
 
+        /* Toast styling */
+        .toast {
+            visibility: hidden;
+            min-width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            padding: 10px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            transition: visibility 0.2s, opacity 0.2s;
+            opacity: 0;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
         /* Wrap products into a responsive 3-4 column grid */
         .products-container {
             display: grid;
-            grid-template-columns: repeat(4, 1fr); /* 4 items per row */
+            grid-template-columns: repeat(4, 1fr);
             gap: 1.25rem;
             width: 100%;
         }
 
-        /* Responsive breakpoints for smaller screens */
         @media (max-width: 1200px) {
             .products-container {
-                grid-template-columns: repeat(3, 1fr); /* 3 items per row on medium screens */
+                grid-template-columns: repeat(3, 1fr);
             }
         }
 
         @media (max-width: 768px) {
             .products-container {
-                grid-template-columns: repeat(2, 1fr); /* 2 items on tablets */
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
         @media (max-width: 480px) {
             .products-container {
-                grid-template-columns: 1fr; /* 1 item on mobile */
+                grid-template-columns: 1fr;
             }
         }
 
-        /* Hide raw horizontal rules */
         hr {
             display: none;
         }
@@ -103,7 +138,6 @@
             box-shadow: var(--shadow);
         }
 
-        /* Product Image */
         div.product-card img {
             width: 100% !important;
             height: 180px;
@@ -112,7 +146,6 @@
             border-radius: 4px;
         }
 
-        /* Product Name */
         div.product-card h2 {
             font-size: 1.05rem;
             font-weight: 600;
@@ -125,7 +158,6 @@
             overflow: hidden;
         }
 
-        /* Description */
         div.product-card p:nth-of-type(1) {
             font-size: 0.85rem;
             color: var(--muted-text);
@@ -138,25 +170,54 @@
             overflow: hidden;
         }
 
-        /* Price */
         div.product-card p:nth-of-type(2) {
             font-size: 1.2rem;
             font-weight: 700;
             color: var(--price-color);
             margin-top: auto;
+            margin-bottom: 0.75rem;
+        }
+
+        .product-card .add-to-cart {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: none;
+            background-color: #ffd814;
+            color: #0f1111;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .product-card .add-to-cart:hover {
+            background-color: #f7ca00;
         }
     </style>
 </head>
 <body>
     <nav>
-                <h1>Our Products</h1>
-                 <!-- Floating Notification Toast -->
-<div id="toast" class="toast"></div>
-        <button><a href="/add_product">Add Product</a></button>
-        <button><a href="/cart">Cart:{{cart_count}}</p></a></button>
-
+        <h1>Our Products</h1>
+        <div class="nav-links">
+        {% if role == 'admin' %}
+            <button><a href="/add_product">Add Product</a></button>
+            <button><a href="/customers">Users</a></button>
+        {% else %}
+        <div class="input-group">
+  <div class="form-outline" data-mdb-input-init>
+    <input id="search-input" type="search" id="form1" class="form-control" />
+    <label class="form-label" for="form1">Search</label>
+  </div>
+  <button id="search-button" type="button" class="btn btn-primary">
+    <i class="fas fa-search"></i>
+  </button>
+</div>
+            <button><a href="/orders">Orders</a></button>
+            <button><a href="/cart">Cart: {{ cart_count }}</a></button>
+        {% endif %}
+    </div>
     </nav>
 
+    <!-- Floating Notification Toast -->
+    <div id="toast" class="toast"></div>
     
     <div class="products-container">
     {% for product in products %}
@@ -169,57 +230,54 @@
             <h2>{{ product.prod_name }}</h2>
             <p>{{ product.des }}</p>
             <p>Price: ₹{{ product.price }}</p>
-        <button
-    type="button"
-    class="add-to-cart"
-    data-product-id="{{ product.prod_id }}">
-    Add to Cart
-</button>
+            
+{% if role != 'admin' %}
+    <button
+        type="button"
+        class="add-to-cart"
+        data-product-id="{{ product.prod_id }}">
+        Add to Cart
+    </button>
+{% endif %}
 
         </div>
         <hr>
     {% else %}
         <p>No products available.</p>
     {% endfor %}
-           
     </div>
+
     <script>
-       const toast = document.getElementById("toast");
+        const toast = document.getElementById("toast");
         document.querySelectorAll(".add-to-cart").forEach(button => {
+            button.addEventListener("click", async () => {
+                const prodId = Number(button.dataset.productId);
 
-    button.addEventListener("click", async () => {
+                const response = await fetch("/cart", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        prod_id: prodId,
+                        quantity: 1
+                    })
+                });
 
-        const prodId = Number(button.dataset.productId);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    alert(data.message || "Failed to add item");
+                    return;
+                }
 
-        const response = await fetch("/cart", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                prod_id: prodId,
-                quantity: 1
-            })
+                toast.textContent = "Product added to cart successfully!";
+                toast.classList.add("show");
+                setTimeout(() => {
+                    toast.classList.remove("show");
+                }, 1500);
+            });
         });
-
-        const data = await response.json();
-        
-        if (!response.ok) {
-            alert(data.message);
-            return;
-        }
-
-        toast.textContent = "Product added to cart successfully!";
-        toast.classList.add("show");
-        setTimeout(() => {
-            toast.classList.remove("show");
-        }, 300);
-
-    });
-
-});
-
-        
     </script>
 </body>
 </html>

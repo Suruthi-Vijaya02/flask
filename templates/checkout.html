@@ -1,10 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Checkout</title>
 
     <style>
@@ -41,19 +39,56 @@
             margin: 25px 0;
         }
 
+        .payment-options {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .payment-options label {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.2s;
+        }
+
+        .payment-options label:hover {
+            background: #e9ecef;
+            border-color: #005f6b;
+        }
+
+        .payment-options input[type="radio"] {
+            accent-color: #005f6b;
+            transform: scale(1.2);
+        }
+
         button {
             width: 100%;
             padding: 13px;
-            background: #198754;
-            color: white;
+            background: #ffc107; /* Yellow theme for main action */
+            color: #212529;
             border: none;
             border-radius: 6px;
             font-size: 16px;
+            font-weight: bold;
             cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #ffca2c;
         }
 
         button:disabled {
             background: #999;
+            color: white;
             cursor: not-allowed;
         }
 
@@ -66,6 +101,12 @@
             display: block;
             text-align: center;
             margin-top: 20px;
+            color: #005f6b;
+            text-decoration: none;
+        }
+
+        .back:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -91,8 +132,17 @@
             Total: ₹{{ "%.2f"|format(total) }}
         </div>
 
+        <h3>Select Payment Method</h3>
+        <div class="payment-options">
+            <label><input type="radio" name="payment_method" value="UPI" checked> UPI</label>
+            <label><input type="radio" name="payment_method" value="PayPal"> PayPal</label>
+            <label><input type="radio" name="payment_method" value="Google Pay"> Google Pay</label>
+            <label><input type="radio" name="payment_method" value="COD"> Cash on Delivery (COD)</label>
+            <label><input type="radio" name="payment_method" value="Dummy Payment"> Dummy Payment</label>
+        </div>
+
         <button id="payButton" type="button">
-            Pay Now (Dummy Payment)
+            Proceed with Payment
         </button>
 
         <p id="message" role="status"></p>
@@ -104,38 +154,47 @@
 
 <script>
     const button = document.querySelector("#payButton");
-const message = document.querySelector("#message");
+    const message = document.querySelector("#message");
 
-button.addEventListener("click", async () => {
-    button.disabled = true;
-    message.textContent = "Processing payment...";
+    button.addEventListener("click", async () => {
+        // Get the selected payment method radio button value
+        const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+        const paymentMethod = selectedPayment ? selectedPayment.value : "Unknown";
 
-    try {
-        const response = await fetch("/checkout", {
-            method: "POST"
-        });
+        button.disabled = true;
+        message.textContent = "Processing payment...";
 
-        const data = await response.json();
+        try {
+            const response = await fetch("/checkout", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ payment_method: paymentMethod })
+            });
 
-        if (response.ok) {
-            message.innerHTML = `
-                <h2>✓ Order Successful!</h2>
-                <p>Order ID: ${data.order_id}</p>
-                <p>Total: ₹${Number(data.total).toFixed(2)}</p>
-                <p>Order summary sent to your email.</p>
-            `;
+            const data = await response.json();
 
-            button.style.display = "none";
-        } else {
-            message.textContent = data.message;
+            if (response.ok) {
+                message.innerHTML = `
+                    <h2>✓ Order Successful!</h2>
+                    <p>Order ID: ${data.order_id}</p>
+                    <p>Method: ${paymentMethod}</p>
+                    <p>Total: ₹${Number(data.total).toFixed(2)}</p>
+                    <p>Order summary sent to your email.</p>
+                `;
+
+                button.style.display = "none";
+            } else {
+                message.textContent = data.message || "Checkout failed.";
+                button.disabled = false;
+            }
+        } catch (error) {
+            console.error(error);
+            message.textContent = "Unable to process checkout.";
             button.disabled = false;
         }
-    } catch (error) {
-        console.error(error);
-        message.textContent = "Unable to process checkout.";
-        button.disabled = false;
-    }
-});
+    });
 </script>
 </body>
 </html>

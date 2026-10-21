@@ -4,7 +4,12 @@ import smtplib,random
 from email.mime.text import MIMEText
 import os
 from dotenv import load_dotenv
-
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import JWTManager
+from routes.auth_routes import auth_bp
+from routes.jwt_routes import jwt_bp
+from routes.admin_routes import admin_bp
+from routes.admin_routes import admin_required
 load_dotenv()
 
 app = Flask(__name__)
@@ -16,71 +21,26 @@ db = mysql.connector.connect(
     password=os.getenv("DB_PASSWORD"),
     database="flasklearning"
 )
-# import routes
 print("Database connected successfully")
-print(app.url_map)
 
-@app.route('/register',methods=["POST"])
-def register():
-    data= request.json
-    username=data.get("username")
-    if not username:
-        return jsonify({"message":"Username is required"}),400
-    cursor=db.cursor()
-    email=data.get("email")
-    if not email:
-        return jsonify({"message":"Email is required"}),400
-    cursor.execute("select id from users where email=%s",(email,))
-    result = cursor.fetchone()
-    if result:
-        return jsonify({"message":"Email already exists"}),400
-    password=data.get("password")
-    if not password:
-        return jsonify({"message":"Password is required"}),400
-    cursor.execute("insert into users(username,email,password) values(%s,%s,%s)",(username,email,password))
-    db.commit()
-    user_id = cursor.lastrowid
-    session["user_id"] = user_id
-    return jsonify({"message":"User registered successfully"}),200
-    pass
+app.config["db"] = db
 
-@app.route('/login', methods=["POST"])
-def login():
-    data = request.json
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 
-    if not data:
-        return jsonify({"message": "Data is required"}), 400
+jwt = JWTManager(app)
 
-    email = data.get("email")
-    if not email:
-        return jsonify({"message": "Email is required"}), 400
+app.register_blueprint(auth_bp)
+app.register_blueprint(jwt_bp)
+app.register_blueprint(admin_bp)
 
-    password = data.get("password")
-    if not password:
-        return jsonify({"message": "Password is required"}), 400
+#register,login get
+@app.route("/register", methods=["GET"])
+def register_page():
+    return render_template("register.html")
 
-    cursor = db.cursor()
-
-    cursor.execute(
-        "SELECT id, password FROM users WHERE email=%s",
-        (email,)
-    )
-
-    result = cursor.fetchone()
-
-    if not result:
-        return jsonify({"message": "User not found"}), 404
-
-    user_id = result[0]
-    db_password = result[1]
-
-    if db_password == password:
-        session["user_id"] = user_id
-
-        return jsonify({"message": "Login successful"}), 200
-
-    else:
-        return jsonify({"message": "Invalid password"}), 401
+@app.route("/login", methods=["GET"])
+def login_page():
+    return render_template("login.html")
 
 @app.route("/onboarding",methods=["post"] )
 def onboarding():
@@ -123,13 +83,6 @@ def welcome():
     user=cursor.fetchone()
     return render_template("welcome.html", user=user)
 
-@app.route("/register", methods=["GET"])
-def register_page():
-    return render_template("register.html")
-
-@app.route("/login", methods=["GET"])
-def login_page():
-    return render_template("login.html")
 
 @app.route("/onboarding", methods=["GET"])
 def onboarding_page():
@@ -197,31 +150,52 @@ def reset_password_page():
     return render_template("reset.html")
 
 #products
+
 @app.route("/products", methods=["GET"])
 def products():
     cursor = db.cursor(dictionary=True, buffered=True)
 
+    user_id = session.get("user_id")
+
+    # Get the logged-in user's role
+    cursor.execute(
+        "SELECT role FROM users WHERE id = %s",
+        (user_id,)
+    )
+    user = cursor.fetchone()
+    role = user["role"] if user else None
+
+    # Get all products
     cursor.execute(
         "SELECT prod_id, prod_name, des, price, image FROM products"
     )
     products = cursor.fetchall()
-    
+
+    # Get cart count
     cursor.execute(
-        "SELECT sum(quantity) as count FROM cart WHERE user_id = %s",
-        (session.get("user_id"),)
+        "SELECT SUM(quantity) AS count FROM cart WHERE user_id = %s",
+        (user_id,)
     )
     cart_result = cursor.fetchone()
-    cart_count = cart_result["count"] if cart_result else 0
-    
+    cart_count = cart_result["count"] if cart_result and cart_result["count"] else 0
+
     cursor.close()
 
-    return render_template("products.html", cart_count=cart_count, products=products)
-    
+    return render_template(
+        "products.html",
+        role=role,
+        cart_count=cart_count,
+        products=products
+    )
 
-@app.route("/add_product",methods=["POST","GET"])
+    
+@app.route("/add_product",methods=["GET"])
+def add_product_page():
+    return render_template("add_product.html")
+@app.route("/add_product",methods=["POST"])
+@admin_required()
 def add_product():
-    if request.method=="GET":
-        return render_template("add_product.html")
+
     data= request.json;
     if data is None:
         return jsonify({"message":"Data required"},400)
@@ -391,6 +365,11 @@ def remove_from_cart(prod_id):
 @app.route("/checkout", methods=["POST"])
 def checkout():
     user_id = session.get("user_id")
+    data = request.json
+
+    if data is None:
+        return jsonify({"message": "Data required"}), 400
+    payment_method=data.get("payment_method")
 
     if not user_id:
         return jsonify({"message": "Please login first"}), 401
@@ -400,7 +379,7 @@ def checkout():
     try:
         # 1. Get cart items and product details
         cursor.execute("""
-            SELECT p.prod_name, p.price, c.quantity
+            SELECT p.prod_id, p.prod_name, p.price, c.quantity
             FROM cart c
             JOIN products p ON c.prod_id = p.prod_id
             WHERE c.user_id = %s
@@ -414,12 +393,17 @@ def checkout():
         # 2. Calculate total and prepare order summary
         total = 0
         order_summary = []
-
+        status="SUCCESS"
         for item in cart_items:
             subtotal = float(item["price"]) * item["quantity"]
-            total += subtotal
+            if payment_method == "COD":
+                total += subtotal + 50
+                status="pending"
+            else:
+                total += subtotal
 
             order_summary.append({
+                "prod_id": item["prod_id"],
                 "product": item["prod_name"],
                 "price": float(item["price"]),
                 "quantity": item["quantity"],
@@ -436,13 +420,23 @@ def checkout():
         if not user:
             return jsonify({"message": "User not found"}), 404
 
+
         # 4. Save the dummy order
         cursor.execute("""
-            INSERT INTO orders (user_id, total_amount, payment_status)
-            VALUES (%s, %s, %s)
-        """, (user_id, total, "SUCCESS"))
+            INSERT INTO orders (user_id, total_amount, payment_status,payment_method)
+            VALUES (%s, %s, %s, %s)
+        """, (user_id, total, status,payment_method))
 
         order_id = cursor.lastrowid
+        order_items_data = [
+            (order_id, item["prod_id"], item["prod_name"], item["price"], item["quantity"])
+            for item in cart_items
+        ]
+        
+        cursor.executemany("""
+            INSERT INTO order_items (order_id, product_id, product_name, price, quantity)
+            VALUES (%s, %s, %s, %s, %s)
+        """, order_items_data)
 
         # 5. Prepare the email
         lines = [
@@ -478,7 +472,8 @@ def checkout():
             server.login("r.sruthirajeev688@gmail.com",os.getenv("SMTP_PASSWORD"))
 
             server.send_message(message)
-
+        #adding items to roder table
+        
         # 7. Clear this user's cart only after email succeeds
         cursor.execute(
             "DELETE FROM cart WHERE user_id = %s",
@@ -527,7 +522,36 @@ def checkout_page():
     finally:
         cursor.close()
 
-        
+@app.route("/orders", methods=["GET"])
+def orders():
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect("/login") # or handle unauthorized access
+
+    # Use dictionary=True so we can use order['order_id'] instead of indices
+    cursor = db.cursor(dictionary=True)
+    
+    # We join orders with order_items to get a comma-separated summary of items per order
+    cursor.execute("""
+        SELECT o.order_id, o.total_amount, o.payment_status, o.payment_method,
+               GROUP_CONCAT(CONCAT(oi.product_name, ' (x', oi.quantity, ')') SEPARATOR ', ') AS items_summary
+        FROM orders o
+        LEFT JOIN order_items oi ON o.order_id = oi.order_id
+        WHERE o.user_id = %s
+        GROUP BY o.order_id
+        ORDER BY o.order_id DESC;
+    """, (user_id,))
+    
+    user_orders = cursor.fetchall()  
+    cursor.close()         
+    
+    return render_template("order.html", orders=user_orders)
+
+
+@app.route("/admin", methods=["GET"])
+@admin_required()
+def admin_dashboard():
+    return render_template("admin.html")
 
 if __name__ == '__main__':
     app.run(debug=True)
